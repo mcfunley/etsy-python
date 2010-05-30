@@ -64,8 +64,11 @@ on Code as Craft.
 
 ## Version History
 
-### Version 0.2 
-* 05-30-2010 - Added support for the v2 API, configuration, and tests.
+### Version 0.2 - in progress
+* Added support for the v2 API
+* Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.
+* Added a test suite.
+* Added module to PyPI. 
 
-### Version 0.1
-* 05-24-2010 - Initial release
+### Version 0.1 - 05-24-2010 
+Initial release

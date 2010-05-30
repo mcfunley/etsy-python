@@ -3,12 +3,13 @@ from unittest import TestCase
 from etsy._core import API
 from cgi import parse_qs
 from urlparse import urlparse
+import os
 
     
 
-
 class MockAPI(API):
     api_url = 'http://host'
+    api_version = 'v1'
 
     def _get_method_table(self):
         return [{'name': 'testMethod', 
@@ -91,5 +92,39 @@ class CoreTests(TestCase):
                              e.message)
         else:
             self.fail('should have failed')
+
+
+    def test_api_should_define_version(self):
+        class Foo(API):
+            api_url = 'http://host'
+
+        try:
+            Foo()
+        except AssertionError, e:
+            self.assertEqual(e.message, 'API object should define api_version')
+        else:
+            self.fail('should have failed')
+
+
+    def test_key_file_does_not_exist(self):
+        try:
+            MockAPI(key_file='this does not exist')
+        except AssertionError, e:
+            self.assertTrue("'this does not exist' does not exist" 
+                            in e.message)
+        else:
+            self.fail('should have failed')
+
+
+    def test_reading_api_key(self):
+        with open('testkeys', 'w') as f:
+            f.write("v1 = 'abcdef'")
+        try:
+            self.assertEqual(MockAPI(key_file='testkeys').api_key, 'abcdef')
+        finally:
+            os.unlink('testkeys')
+
+
+            
 
 

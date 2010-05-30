@@ -37,6 +37,28 @@ Type "help", "copyright", "credits" or "license" for more information.
 </pre>
 
 
+## Compatibility
+
+There are currently two versions of the Etsy API, v1 and v2. This library will work
+with both versions. The basic interface to either API is the same, although many
+of the methods are different. You can start using the v2 API by using an import 
+like this:
+
+<pre>
+from etsy import EtsyV2 as Etsy
+</pre>
+
+At some point, the v2 API will replace the v1 API as the default. Therefore you 
+may want to import the v1 API explicitly, like this:
+
+<pre>
+from etsy import EtsyV1 as Etsy
+</pre>
+
+See also [this blog post](http://codeascraft.etsy.com/2010/04/22/announcing-etsys-new-api/)
+on Code as Craft.
+
+
 ## Configuration
 
 

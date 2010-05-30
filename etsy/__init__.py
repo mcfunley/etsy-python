@@ -1,4 +1,4 @@
-from _v1 import EtsyV1 as Etsy
+from _v1 import EtsyV1, EtsyV1 as Etsy
 from _v2 import EtsyV2 
 
 

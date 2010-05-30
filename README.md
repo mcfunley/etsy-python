@@ -5,14 +5,21 @@ By Dan McKinley - dan@etsy.com - [http://mcfunley.com](http://mcfunley.com)
 
 ## Installation
 
-After downloading and extracting the tarball,
+The simplest way to install the module is using 
+[setuptools](http://pypi.python.org/pypi/setuptools).
+
+<pre>
+$ easy_install etsy
+</pre>
+
+To install from source, extract the tarball and use the following commands.
 
 <pre>
 $ python setup.py build
 $ sudo python setup.py install
 </pre>
 
-## Example
+## Simple Example
 
 To use, first [register for an Etsy developer key](http://developer.etsy.com/).
 Below is an example session. 
@@ -30,7 +37,13 @@ Type "help", "copyright", "credits" or "license" for more information.
 </pre>
 
 
+## Configuration
+
+
 ## Version History
+
+### Version 0.2 
+* 05-30-2010 - Added support for the v2 API, configuration, and tests.
 
 ### Version 0.1
 * 05-24-2010 - Initial release

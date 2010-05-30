@@ -6,8 +6,8 @@ this_dir = os.path.realpath(os.path.dirname(__file__))
 long_description = open(os.path.join(this_dir, 'README.md'), 'r').read()
 
 setup(
-    name = 'etsy-python',
-    version = '0.1',
+    name = 'etsy',
+    version = '0.2',
     author = 'Dan McKinley',
     author_email = 'dan@etsy.com',
     description = 'Python access to the Etsy API',
@@ -15,4 +15,6 @@ setup(
     keywords = 'etsy api handmade',
     packages = ['etsy'],
     long_description = long_description,
+    test_suite = 'test',
+    setup_requires=['simplejson >= 2.0'],
     )

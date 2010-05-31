@@ -73,15 +73,14 @@ v2 = 'Etsy API version 2 key goes here'
 
 Alternatively, you can specify a different key file when creating an API object.
 
-(Implementation note: the keys file can be any valid python script that defines
-a module-level variable for the API version you are trying to use.)
-
 <pre>
 from etsy import Etsy
 
 api = Etsy(key_file='/usr/share/etsy/keys')
 </pre>
 
+(Implementation note: the keys file can be any valid python script that defines
+a module-level variable for the API version you are trying to use.)
 
 ## Tests
 

@@ -61,6 +61,31 @@ on Code as Craft.
 
 ## Configuration
 
+For convenience, the package supports local configuration. You can manage your 
+API keys in a file called $HOME/etsy/keys (or the equivalent on Windows) with 
+the following format:
+
+<pre>
+v1 = 'Etsy API version 1 key goes here'
+v2 = 'Etsy API version 2 key goes here'
+</pre>
+
+Alternatively, you can specify a different key file when creating an API object.
+
+<pre>
+from etsy import Etsy
+
+api = Etsy(key_file='/usr/share/etsy/keys')
+</pre>
+
+
+
+## Future Work
+
+Currently, the API objects download the method tables from etsy.com upon module load.
+While this is fine for persistent or long-running applications, it is not ideal for
+short-lived programs where the cost of such an operation becomes very significant. 
+There will be enhancements in the future to address this problem in a number of ways.
 
 ## Version History
 

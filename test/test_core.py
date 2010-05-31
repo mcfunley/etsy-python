@@ -1,10 +1,9 @@
 from __future__ import with_statement
-from unittest import TestCase
 from etsy._core import API
 from cgi import parse_qs
 from urlparse import urlparse
 import os
-
+from util import Test
     
 
 class MockAPI(API):
@@ -17,8 +16,12 @@ class MockAPI(API):
                  'http_method': 'GET', 
                  'params': { 
                      'limit': 'int',
-                     'test_id': 'int',
+                     'test_id': 'user_id_or_name',
                      'offset': 'int',
+                     'fizz': 'enum(foo, bar, baz)',
+                     'buzz': 'float',
+                     'blah': 'unknown type',
+                     'kind': 'string',
                      },
                  'type': 'int', 
                  'description': 'test method.'}]
@@ -29,7 +32,7 @@ class MockAPI(API):
 
 
 
-class CoreTests(TestCase):
+class CoreTests(Test):
     def setUp(self):
         self.api = MockAPI('apikey')
 
@@ -71,49 +74,33 @@ class CoreTests(TestCase):
         self.assertEquals(self.api.testMethod.__doc__,
                           'test method.')
 
-    
+
+
     def test_api_url_required(self):
-        try:
-            API('')
-        except AssertionError, e:
-            self.assertEqual('No api_url configured.', e.message)
-        else:
-            self.fail('should have failed')
+        msg = self.assertRaises(AssertionError, API, '')
+        self.assertEqual('No api_url configured.', msg)
 
 
     def test_api_url_cannot_end_with_slash(self):
         class Foo(API):
             api_url = 'http://host/'
 
-        try:
-            Foo('')
-        except AssertionError, e:
-            self.assertEqual('api_url should not end with a slash.', 
-                             e.message)
-        else:
-            self.fail('should have failed')
+        msg = self.assertRaises(AssertionError, Foo, '')
+        self.assertEqual('api_url should not end with a slash.', msg)
 
 
     def test_api_should_define_version(self):
         class Foo(API):
             api_url = 'http://host'
 
-        try:
-            Foo()
-        except AssertionError, e:
-            self.assertEqual(e.message, 'API object should define api_version')
-        else:
-            self.fail('should have failed')
+        msg = self.assertRaises(AssertionError, Foo)
+        self.assertEqual(msg, 'API object should define api_version')
 
 
     def test_key_file_does_not_exist(self):
-        try:
-            MockAPI(key_file='this does not exist')
-        except AssertionError, e:
-            self.assertTrue("'this does not exist' does not exist" 
-                            in e.message)
-        else:
-            self.fail('should have failed')
+        msg = self.assertRaises(AssertionError, MockAPI, 
+                                key_file='this does not exist')
+        self.assertTrue("'this does not exist' does not exist" in msg)
 
 
     def test_reading_api_key(self):
@@ -125,6 +112,62 @@ class CoreTests(TestCase):
             os.unlink('testkeys')
 
 
-            
+    def test_unrecognized_kwarg(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, not_an_arg=1)
+        self.assertEqual(msg, 'Unexpected argument: not_an_arg=1')
+
+    
+    def test_unknown_parameter_type_is_passed(self):
+        self.api.testMethod(blah=1)
+        self.assertEqual(self.last_query()['blah'], ['1'])
+
+
+    def test_parameter_type_int(self):
+        self.api.testMethod(limit=5)
+        self.assertEqual(self.last_query()['limit'], ['5'])
+
+
+    def bad_value_msg(self, name, t, v):
+        return "Bad value for parameter %s of type '%s' - %s" % (name, t, v)
+
+    def test_invalid_parameter_type_int(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, limit=5.6)
+        self.assertEqual(msg, self.bad_value_msg('limit', 'int', 5.6))
+
+
+    def test_parameter_type_float(self):
+        self.api.testMethod(buzz=42.1)
+        self.assertEqual(self.last_query()['buzz'], ['42.1'])
+
+
+    def test_invalid_parameter_type_float(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, buzz='x')
+        self.assertEqual(msg, self.bad_value_msg('buzz', 'float', 'x'))
+
+    
+    def test_int_accepted_as_float(self):
+        self.api.testMethod(buzz=3)
+        self.assertEqual(self.last_query()['buzz'], ['3'])
+
+        
+    def test_parameter_type_enum(self):
+        self.api.testMethod(fizz='bar')
+        self.assertEqual(self.last_query()['fizz'], ['bar'])
+
+
+    def test_invalid_parameter_type_enum(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, fizz='goo')
+        self.assertEqual(msg, self.bad_value_msg(
+                'fizz', 'enum(foo, bar, baz)', 'goo'))
+
+
+    def test_parameter_type_string(self):
+        self.api.testMethod(kind='blah')
+        self.assertEqual(self.last_query()['kind'], ['blah'])
+
+
+    def test_invalid_parameter_type_string(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, kind=Test)
+        self.assertEqual(msg, self.bad_value_msg('kind', 'string', Test))
 
 

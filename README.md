@@ -79,6 +79,18 @@ api = Etsy(key_file='/usr/share/etsy/keys')
 </pre>
 
 
+## Tests
+
+This package comes with a reasonably complete unit test suite. In order to run
+the tests, use:
+
+<pre>
+$ python setup.py test
+</pre>
+
+Some of the tests (those that actually call the Etsy API) require your API key
+to be locally configured. See the Configuration section, above.
+
 
 ## Future Work
 
@@ -92,6 +104,7 @@ There will be enhancements in the future to address this problem in a number of 
 ### Version 0.2 - in progress
 * Added support for the v2 API
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.
+* Added client-side type checking for parameters.
 * Added a test suite.
 * Added module to PyPI. 
 

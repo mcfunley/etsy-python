@@ -8,6 +8,67 @@ import os
 
 
 
+class TypeChecker(object):
+    def __init__(self):
+        self.checkers = {
+            'int': self.check_int,
+            'float': self.check_float,
+            'string': self.check_string,
+            }
+
+
+    def __call__(self, method, **kwargs):
+        params = method['params']
+        for k, v in kwargs.items():
+            if k not in params:
+                raise ValueError('Unexpected argument: %s=%s' % (k, v))
+            
+            t = params[k]
+            checker = self.checkers.get(t, None) or self.compile(t)
+            ok, converted = checker(v)
+            if not ok:
+                raise ValueError(
+                    "Bad value for parameter %s of type '%s' - %s" % (k, t, v))
+            kwargs[k] = converted
+
+
+    def compile(self, t):
+        if t.startswith('enum'):
+            f = self.compile_enum(t)
+        else:
+            f = self.always_ok
+        self.checkers[t] = f
+        return f
+
+
+    def compile_enum(self, t):
+        terms = [x.strip() for x in t[5:-1].split(',')]
+        def check_enum(value):
+            return (value in terms), value
+        return check_enum
+
+
+    def always_ok(self, value):
+        return True, value
+
+
+    def check_int(self, value):
+        return isinstance(value, int), value
+
+    
+    def check_float(self, value):
+        if isinstance(value, int):
+            return True, value
+        return isinstance(value, float), value
+
+    
+    def check_string(self, value):
+        return isinstance(value, basestring), value
+
+    
+
+
+
 class API(object):
     def __init__(self, api_key='', key_file=None):
         if not getattr(self, 'api_url', None):
@@ -24,11 +85,16 @@ class API(object):
         else:
             self.api_key = self._read_key(key_file)
 
+        self.type_checker = TypeChecker()
+
         d = JSONDecoder()
         self.decode = d.decode
 
-        for method in self._get_method_table():
-            self._create_method(**method)
+        ms = self._get_method_table()
+        self._methods = dict([(m['name'], m) for m in ms])
+
+        for method in ms:
+            self._create_method(method)
 
 
     def _get_method_table(self):
@@ -47,12 +113,17 @@ class API(object):
         return gs[self.api_version]
         
 
-    def _create_method(self, name, description, uri, **kw):
+    def _create_method(self, m):
         def method(**kwargs):
-            return self._get(uri, **kwargs)
-        method.__name__ = name
-        method.__doc__ = description
-        setattr(self, name, method)
+            return self._invoke(m, **kwargs)
+        method.__name__ = m['name']
+        method.__doc__ = m['description']
+        setattr(self, m['name'], method)
+
+
+    def _invoke(self, m, **kwargs):
+        self.type_checker(m, **kwargs)
+        return self._get(m['uri'], **kwargs)
 
 
     def _get_url(self, url):

@@ -109,6 +109,7 @@ There will be enhancements in the future to address this problem in a number of 
 * Added support for the v2 API
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.
 * Added client-side type checking for parameters.
+* Added support for positional arguments.
 * Added a test suite.
 * Added module to PyPI. 
 

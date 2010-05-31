@@ -5,6 +5,7 @@ import urllib2
 from urllib import urlencode
 from ConfigParser import ConfigParser
 import os
+import re
 
 
 
@@ -65,7 +66,51 @@ class TypeChecker(object):
     def check_string(self, value):
         return isinstance(value, basestring), value
 
+
+
+
+class APIMethod(object):
+    def __init__(self, api, spec):
+        self.api = api
+        self.spec = spec
+        self.type_checker = self.api.type_checker
+        self.__doc__ = self.spec['description']
+        self.compiled = False
     
+
+    def __call__(self, *args, **kwargs):
+        if not self.compiled:
+            self.compile()
+        return self.invoke(*args, **kwargs)
+
+
+    def compile(self):
+        self.positionals = re.findall('{(.*)}', self.spec['uri'])
+        self.compiled = True
+
+
+    def invoke(self, *args, **kwargs):
+        if args and not self.positionals:
+            raise ValueError(
+                'Positional argument(s): %s provided, but this method does '
+                'not support them.' % (args,))
+
+        if len(args) > len(self.positionals):
+            raise ValueError('Too many positional arguments.')
+
+        for k, v in zip(self.positionals, args):
+            if k in kwargs:
+                raise ValueError(
+                    'Positional argument duplicated in kwargs: %s' % k)
+            kwargs[k] = v
+
+        for p in self.positionals:
+            if p not in kwargs:
+                raise ValueError("Required argument '%s' not provided." % p)
+
+        self.type_checker(self.spec, **kwargs)
+        return self.api._get(self.spec['uri'], **kwargs)
+
 
 
 
@@ -94,7 +139,7 @@ class API(object):
         self._methods = dict([(m['name'], m) for m in ms])
 
         for method in ms:
-            self._create_method(method)
+            setattr(self, method['name'], APIMethod(self, method))
 
 
     def _get_method_table(self):
@@ -113,19 +158,6 @@ class API(object):
         return gs[self.api_version]
         
 
-    def _create_method(self, m):
-        def method(**kwargs):
-            return self._invoke(m, **kwargs)
-        method.__name__ = m['name']
-        method.__doc__ = m['description']
-        setattr(self, m['name'], method)
-
-
-    def _invoke(self, m, **kwargs):
-        self.type_checker(m, **kwargs)
-        return self._get(m['uri'], **kwargs)
-
-
     def _get_url(self, url):
         with closing(urllib2.urlopen(url)) as f:
             return f.read() 
@@ -135,7 +167,7 @@ class API(object):
         for k, v in kwargs.items():
             arg = '{%s}' % k
             if arg in url:
-                url = url.replace(arg, v)
+                url = url.replace(arg, str(v))
                 del kwargs[k]
 
         kwargs.update(dict(api_key=self.api_key))

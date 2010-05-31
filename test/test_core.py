@@ -24,7 +24,13 @@ class MockAPI(API):
                      'kind': 'string',
                      },
                  'type': 'int', 
-                 'description': 'test method.'}]
+                 'description': 'test method.'},
+                {'name': 'noPositionals',
+                 'uri': '/blah',
+                 'http_method': 'GET',
+                 'params': {'foo': 'int'},
+                 'type': 'int',
+                 'description': 'no pos arguments'}]
 
 
     def _get_url(self, url):
@@ -113,17 +119,18 @@ class CoreTests(Test):
 
 
     def test_unrecognized_kwarg(self):
-        msg = self.assertRaises(ValueError, self.api.testMethod, not_an_arg=1)
+        msg = self.assertRaises(ValueError, self.api.testMethod, 
+                                test_id=1, not_an_arg=1)
         self.assertEqual(msg, 'Unexpected argument: not_an_arg=1')
 
     
     def test_unknown_parameter_type_is_passed(self):
-        self.api.testMethod(blah=1)
+        self.api.testMethod(test_id=1, blah=1)
         self.assertEqual(self.last_query()['blah'], ['1'])
 
 
     def test_parameter_type_int(self):
-        self.api.testMethod(limit=5)
+        self.api.testMethod(test_id=1, limit=5)
         self.assertEqual(self.last_query()['limit'], ['5'])
 
 
@@ -131,43 +138,73 @@ class CoreTests(Test):
         return "Bad value for parameter %s of type '%s' - %s" % (name, t, v)
 
     def test_invalid_parameter_type_int(self):
-        msg = self.assertRaises(ValueError, self.api.testMethod, limit=5.6)
+        msg = self.assertRaises(ValueError, self.api.testMethod, 
+                                test_id=1, limit=5.6)
         self.assertEqual(msg, self.bad_value_msg('limit', 'int', 5.6))
 
 
     def test_parameter_type_float(self):
-        self.api.testMethod(buzz=42.1)
+        self.api.testMethod(test_id=1, buzz=42.1)
         self.assertEqual(self.last_query()['buzz'], ['42.1'])
 
 
     def test_invalid_parameter_type_float(self):
-        msg = self.assertRaises(ValueError, self.api.testMethod, buzz='x')
+        msg = self.assertRaises(ValueError, self.api.testMethod, 
+                                test_id=1, buzz='x')
         self.assertEqual(msg, self.bad_value_msg('buzz', 'float', 'x'))
 
     
     def test_int_accepted_as_float(self):
-        self.api.testMethod(buzz=3)
+        self.api.testMethod(test_id=1, buzz=3)
         self.assertEqual(self.last_query()['buzz'], ['3'])
 
         
     def test_parameter_type_enum(self):
-        self.api.testMethod(fizz='bar')
+        self.api.testMethod(test_id=1, fizz='bar')
         self.assertEqual(self.last_query()['fizz'], ['bar'])
 
 
     def test_invalid_parameter_type_enum(self):
-        msg = self.assertRaises(ValueError, self.api.testMethod, fizz='goo')
+        msg = self.assertRaises(ValueError, self.api.testMethod, 
+                                test_id=1, fizz='goo')
         self.assertEqual(msg, self.bad_value_msg(
                 'fizz', 'enum(foo, bar, baz)', 'goo'))
 
 
     def test_parameter_type_string(self):
-        self.api.testMethod(kind='blah')
+        self.api.testMethod(test_id=1, kind='blah')
         self.assertEqual(self.last_query()['kind'], ['blah'])
 
 
     def test_invalid_parameter_type_string(self):
-        msg = self.assertRaises(ValueError, self.api.testMethod, kind=Test)
+        msg = self.assertRaises(ValueError, self.api.testMethod, 
+                                test_id=1, kind=Test)
         self.assertEqual(msg, self.bad_value_msg('kind', 'string', Test))
 
 
+    def test_url_arguments_work_positionally(self):
+        self.api.testMethod('foo')
+        self.assertEqual(self.api.last_url, 
+                         'http://host/test/foo?api_key=apikey')
+
+
+    def test_method_with_no_positionals_doesnt_accept_them(self):
+        msg = self.assertRaises(ValueError, self.api.noPositionals, 1, 2)
+        self.assertEqual('Positional argument(s): (1, 2) provided, but this '
+                         'method does not support them.', msg)
+
+    
+    def test_too_many_positionals(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, 1, 2)
+        self.assertEqual('Too many positional arguments.', msg)
+
+
+    def test_positional_argument_not_provided(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod)
+        self.assertEqual("Required argument 'test_id' not provided.", msg)
+
+
+    def test_positional_argument_duplicated_in_kwargs(self):
+        msg = self.assertRaises(ValueError, self.api.testMethod, 1, test_id=2)
+        self.assertEqual('Positional argument duplicated in kwargs: test_id', 
+                         msg)

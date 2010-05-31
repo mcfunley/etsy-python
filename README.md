@@ -61,9 +61,10 @@ on Code as Craft.
 
 ## Configuration
 
-For convenience, the package supports local configuration. You can manage your 
-API keys in a file called $HOME/etsy/keys (or the equivalent on Windows) with 
-the following format:
+For convenience (and to avoid storing API keys in revision control
+systems), the package supports local configuration. You can manage
+your API keys in a file called $HOME/etsy/keys (or the equivalent on
+Windows) with the following format:
 
 <pre>
 v1 = 'Etsy API version 1 key goes here'
@@ -71,6 +72,9 @@ v2 = 'Etsy API version 2 key goes here'
 </pre>
 
 Alternatively, you can specify a different key file when creating an API object.
+
+(Implementation note: the keys file can be any valid python script that defines
+a module-level variable for the API version you are trying to use.)
 
 <pre>
 from etsy import Etsy

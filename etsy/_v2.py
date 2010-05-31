@@ -2,5 +2,7 @@
 
 
 class EtsyV2(object):
-    pass
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError()
+
 

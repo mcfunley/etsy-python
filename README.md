@@ -39,10 +39,12 @@ Type "help", "copyright", "credits" or "license" for more information.
 
 ## Compatibility
 
-There are currently two versions of the Etsy API, v1 and v2. This library will work
-with both versions. The basic interface to either API is the same, although many
-of the methods are different. You can start using the v2 API by using an import 
-like this:
+*Draft - v2 API support not implemented yet.*
+
+There are currently two versions of the Etsy API, v1 and v2. This
+library works with both versions. The basic interface to either API is
+the same, although many of the methods are different. In order to use
+the v2 API,
 
 <pre>
 from etsy import EtsyV2 as Etsy
@@ -105,11 +107,11 @@ There will be enhancements in the future to address this problem in a number of 
 ## Version History
 
 ### Version 0.2 - in progress
-* Added support for the v2 API
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.
 * Added client-side type checking for parameters.
 * Added support for positional arguments.
 * Added a test suite.
+* Began differentiation between API versions.
 * Added module to PyPI. 
 
 ### Version 0.1 - 05-24-2010 

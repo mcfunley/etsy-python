@@ -85,7 +85,13 @@ class APIMethod(object):
 
 
     def compile(self):
-        self.positionals = re.findall('{(.*)}', self.spec['uri'])
+        uri = self.spec['uri']
+        self.positionals = re.findall('{(.*)}', uri)
+
+        for p in self.positionals:
+            uri = uri.replace('{%s}' % p, '%%(%s)s' % p)
+        self.uri_format = uri
+
         self.compiled = True
 
 
@@ -104,12 +110,15 @@ class APIMethod(object):
                     'Positional argument duplicated in kwargs: %s' % k)
             kwargs[k] = v
 
+        ps = {}
         for p in self.positionals:
             if p not in kwargs:
                 raise ValueError("Required argument '%s' not provided." % p)
+            ps[p] = kwargs[p]
+            del kwargs[p]
 
         self.type_checker(self.spec, **kwargs)
-        return self.api._get(self.spec['uri'], **kwargs)
+        return self.api._get(self.uri_format % ps, **kwargs)
 
 
 
@@ -164,12 +173,6 @@ class API(object):
   
 
     def _get(self, url, **kwargs):
-        for k, v in kwargs.items():
-            arg = '{%s}' % k
-            if arg in url:
-                url = url.replace(arg, str(v))
-                del kwargs[k]
-
         kwargs.update(dict(api_key=self.api_key))
         qs = urlencode(kwargs)
         url = '%s%s?%s' % (self.api_url, url, qs)

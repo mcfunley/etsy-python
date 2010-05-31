@@ -106,7 +106,7 @@ There will be enhancements in the future to address this problem in a number of 
 
 ## Version History
 
-### Version 0.2 - in progress
+### Version 0.2 - 05-31-2010
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.
 * Added client-side type checking for parameters.
 * Added support for positional arguments.

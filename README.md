@@ -97,14 +97,43 @@ Some of the tests (those that actually call the Etsy API) require your API key
 to be locally configured. See the Configuration section, above.
 
 
-## Future Work
+## Method Table Caching
 
-Currently, the API objects download the method tables from etsy.com upon module load.
-While this is fine for persistent or long-running applications, it is not ideal for
-short-lived programs where the cost of such an operation becomes very significant. 
-There will be enhancements in the future to address this problem in a number of ways.
+This module is implemented by metaprogramming against the method table published
+by the Etsy API. In other words, API methods are not explicitly declared by the
+code in this module. Instead, the list of allowable methods is downloaded and 
+the patched into the API objects at runtime.
+
+This has advantages and disadvantages. It allows the module to automatically 
+receive new features, but on the other hand, this process is not as fast as 
+explicitly declared methods. 
+
+In order to speed things up, the method table json is cached locally by default.
+If a $HOME/etsy directory exists, the cache file is created there. Otherwise, it 
+is placed in the machine's temp directory. By default, this cache lasts 24 hours.
+
+The cache file can be specified when creating an API object:
+
+<pre>
+from etsy import Etsy
+
+api = Etsy(method_cache='myfile.json')
+</pre>
+
+Method table caching can also be disabled by passing None as the cache parameter:
+
+<pre>
+from etsy import Etsy
+
+# do not cache methods
+api = Etsy(method_cache=None)
+</pre>
+
 
 ## Version History
+
+### Version 0.2.1 - in progress
+* Added a cache for the method table json.
 
 ### Version 0.2 - 05-31-2010
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.

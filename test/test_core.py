@@ -1,16 +1,17 @@
 from __future__ import with_statement
-from etsy._core import API
+from etsy._core import API, MethodTableCache
 from cgi import parse_qs
 from urlparse import urlparse
 import os
 from util import Test
+
     
 
 class MockAPI(API):
     api_url = 'http://host'
     api_version = 'v1'
 
-    def _get_method_table(self):
+    def _get_method_table(self, *args):
         return [{'name': 'testMethod', 
                  'uri': '/test/{test_id}', 
                  'http_method': 'GET', 
@@ -208,3 +209,31 @@ class CoreTests(Test):
         msg = self.assertRaises(ValueError, self.api.testMethod, 1, test_id=2)
         self.assertEqual('Positional argument duplicated in kwargs: test_id', 
                          msg)
+
+    
+    def test_api_key_and_key_file_both_passed(self):
+        pass
+
+
+    def test_methodcache_uses_etsy_home_if_exists(self):
+        pass
+
+
+    def test_methodcache_uses_temp_dir_if_no_etsy_home(self):
+        pass
+
+    
+    def test_none_passed_does_not_cache(self):
+        pass
+
+
+    def test_methodcache_expired(self):
+        pass
+
+    
+    def test_methodcache_caches_result(self):
+        pass
+
+    
+    def test_etsy_home_exists_file_doesnt(self):
+        pass

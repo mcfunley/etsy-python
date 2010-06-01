@@ -1,12 +1,15 @@
 from __future__ import with_statement
 from contextlib import closing
-from simplejson.decoder import JSONDecoder
+import simplejson as json
 import urllib2
 from urllib import urlencode
-from ConfigParser import ConfigParser
 import os
 import re
+import tempfile
+import time
 
+
+missing = object()
 
 
 class TypeChecker(object):
@@ -123,8 +126,78 @@ class APIMethod(object):
 
 
 
+class MethodTableCache(object):
+    max_age = 60*60*24
+
+    def __init__(self, api, method_cache):
+        self.api = api
+        self.filename = self.resolve_file(method_cache)
+
+
+    def etsy_home(self):
+        return os.path.expanduser('~/.etsy')
+
+
+    def resolve_file(self, method_cache):
+        if method_cache is missing:
+            return self.default_file()
+        return method_cache
+
+
+    def default_file(self):
+        etsy_home = self.etsy_home()
+        d = etsy_home if os.path.isdir(etsy_home) else tempfile.gettempdir()
+        return os.path.join(d, 'methods.json')
+
+
+    def get(self):
+        ms = self.get_cached()
+        if not ms:
+            ms = self.api._get('/')
+            self.cache(ms)
+        return ms
+        
+
+    def get_cached(self):
+        if self.filename is None or not os.path.isfile(self.filename):
+            return None
+        if time.time() - os.stat(self.filename).st_mtime > self.max_age:
+            return None
+        with open(self.filename, 'r') as f:
+            return json.loads(f.read())
+
+
+    def cache(self, methods):
+        if self.filename is None:
+            # not caching
+            return
+        with open(self.filename, 'w') as f:
+            json.dump(methods, f)
+
+
+
+
 class API(object):
-    def __init__(self, api_key='', key_file=None):
+    def __init__(self, api_key='', key_file=None, method_cache=missing):
+        """
+        Creates a new API instance. When called with no arguments, 
+        reads the appropriate API key from the default ($HOME/.etsy/keys) 
+        file. 
+
+        Parameters:
+            api_key      - An explicit API key to use.
+            key_file     - A file to read the API keys from. 
+            method_cache - A file to save the API method table in for 
+                           24 hours. This speeds up the creation of API
+                           objects. 
+
+        Only one of api_key and key_file may be passed.
+
+        If method_cache is explicitly set to None, no method table
+        caching is performed. If the parameter is not passed, a file in 
+        $HOME/.etsy is used if that directory exists. Otherwise, a 
+        temp file is used. 
+        """
         if not getattr(self, 'api_url', None):
             raise AssertionError('No api_url configured.')
 
@@ -134,6 +207,10 @@ class API(object):
         if not getattr(self, 'api_version', None):
             raise AssertionError('API object should define api_version')
 
+        if api_key and key_file:
+            raise AssertionError('Keys can be read from a file or passed, '
+                                 'but not both.')
+
         if api_key:
             self.api_key = api_key
         else:
@@ -141,18 +218,18 @@ class API(object):
 
         self.type_checker = TypeChecker()
 
-        d = JSONDecoder()
-        self.decode = d.decode
+        self.decode = json.loads
 
-        ms = self._get_method_table()
+        ms = self._get_method_table(method_cache)
         self._methods = dict([(m['name'], m) for m in ms])
 
         for method in ms:
             setattr(self, method['name'], APIMethod(self, method))
 
 
-    def _get_method_table(self):
-        return self._get('/')
+    def _get_method_table(self, method_cache):
+        c = MethodTableCache(self, method_cache)
+        return c.get()
 
 
     def _read_key(self, key_file):

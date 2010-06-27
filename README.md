@@ -134,6 +134,8 @@ api = Etsy(method_cache=None)
 
 ### Version 0.2.1 - in progress
 * Added a cache for the method table json.
+* Added a logging facility (TODO). 
+
 
 ### Version 0.2 - 05-31-2010
 * Added local configuration (~/.etsy) to eliminate cutting & pasting of api keys.

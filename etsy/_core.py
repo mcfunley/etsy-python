@@ -132,10 +132,8 @@ class MethodTableCache(object):
     def __init__(self, api, method_cache):
         self.api = api
         self.filename = self.resolve_file(method_cache)
-
-
-    def etsy_home(self):
-        return os.path.expanduser('~/.etsy')
+        self.used_cache = False
+        self.wrote_cache = False
 
 
     def resolve_file(self, method_cache):
@@ -144,16 +142,20 @@ class MethodTableCache(object):
         return method_cache
 
 
+    def etsy_home(self):
+        return self.api.etsy_home()
+
+
     def default_file(self):
         etsy_home = self.etsy_home()
         d = etsy_home if os.path.isdir(etsy_home) else tempfile.gettempdir()
-        return os.path.join(d, 'methods.json')
+        return os.path.join(d, 'methods.%s.json' % self.api.api_version)
 
 
     def get(self):
         ms = self.get_cached()
         if not ms:
-            ms = self.api._get('/')
+            ms = self.api.get_method_table()
             self.cache(ms)
         return ms
         
@@ -164,6 +166,7 @@ class MethodTableCache(object):
         if time.time() - os.stat(self.filename).st_mtime > self.max_age:
             return None
         with open(self.filename, 'r') as f:
+            self.used_cache = True
             return json.loads(f.read())
 
 
@@ -173,6 +176,7 @@ class MethodTableCache(object):
             return
         with open(self.filename, 'w') as f:
             json.dump(methods, f)
+            self.wrote_cache = True
 
 
 
@@ -219,21 +223,28 @@ class API(object):
         self.type_checker = TypeChecker()
 
         self.decode = json.loads
+        self._get_methods(method_cache)
 
-        ms = self._get_method_table(method_cache)
+
+    def _get_methods(self, method_cache):
+        self.method_cache = MethodTableCache(self, method_cache)
+        ms = self.method_cache.get()
         self._methods = dict([(m['name'], m) for m in ms])
 
         for method in ms:
             setattr(self, method['name'], APIMethod(self, method))
 
 
-    def _get_method_table(self, method_cache):
-        c = MethodTableCache(self, method_cache)
-        return c.get()
+    def etsy_home(self):
+        return os.path.expanduser('~/.etsy')
+
+
+    def get_method_table(self):
+        return self.get('/')
 
 
     def _read_key(self, key_file):
-        key_file = key_file or os.path.expanduser('~/.etsy/keys')
+        key_file = key_file or os.path.join(self.etsy_home(), 'keys')
         if not os.path.isfile(key_file):
             raise AssertionError(
                 "The key file '%s' does not exist. Create a key file or "

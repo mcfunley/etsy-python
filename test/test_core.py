@@ -1,9 +1,10 @@
 from __future__ import with_statement
-from etsy._core import API, MethodTableCache
+from etsy._core import API, MethodTableCache, missing
 from cgi import parse_qs
 from urlparse import urlparse
 import os
 from util import Test
+import tempfile
 
     
 
@@ -11,7 +12,12 @@ class MockAPI(API):
     api_url = 'http://host'
     api_version = 'v1'
 
-    def _get_method_table(self, *args):
+
+    def etsy_home(self):
+        return Test.scratch_dir
+
+
+    def get_method_table(self, *args):
         return [{'name': 'testMethod', 
                  'uri': '/test/{test_id}', 
                  'http_method': 'GET', 
@@ -210,30 +216,110 @@ class CoreTests(Test):
         self.assertEqual('Positional argument duplicated in kwargs: test_id', 
                          msg)
 
-    
+
     def test_api_key_and_key_file_both_passed(self):
+        msg = self.assertRaises(AssertionError, MockAPI, 
+                                api_key='x', key_file='y')
+        self.assertEqual('Keys can be read from a file or passed, but not both.',
+                         msg)
+
+
+
+class MockAPI_NoMethods(MockAPI):
+    def _get_methods(self, method_cache):
         pass
 
 
-    def test_methodcache_uses_etsy_home_if_exists(self):
-        pass
+
+class MethodTableCacheTests(Test):
 
 
-    def test_methodcache_uses_temp_dir_if_no_etsy_home(self):
-        pass
+    def cache(self, method_cache=missing):
+        self.api = MockAPI_NoMethods('apikey')
+        self._cache = MethodTableCache(self.api, method_cache)
+        return self._cache
 
+
+    def test_uses_etsy_home_if_exists(self):
+        c = self.cache()
+        self.assertEqual(os.path.dirname(c.filename), self.scratch_dir)
+
+
+    def test_uses_temp_dir_if_no_etsy_home(self):
+        self.delete_scratch()
+        c = self.cache()
+        self.assertEqual(os.path.dirname(c.filename), tempfile.gettempdir())
+
+
+    def test_uses_provided_file(self):
+        fn = os.path.join(self.scratch_dir, 'foo.json')
+        self.assertEqual(self.cache(method_cache=fn).filename, fn)
+
+
+    def test_multiple_versions(self):
+        c = self.cache()
+
+        class MockAPI2(MockAPI):
+            api_version = 'v3'
+
+        self.assertNotEqual(MockAPI2('key').method_cache.filename, c.filename)
+
+
+    def get_uncached(self):
+        c = self.cache()
+        return c.get()
+    
+
+    def test_no_cache_file_returns_results(self):
+        self.assertEqual(2, len(self.get_uncached()))
+
+
+    def test_no_cache_file_writes_cache(self):
+        self.get_uncached()
+        self.assertTrue(self._cache.wrote_cache)
+
+    
+    def test_no_cache_file(self):
+        self.get_uncached()
+        self.assertFalse(self._cache.used_cache)
+
+
+    def get_cached(self):
+        c = self.cache()
+        c.get()
+        c = self.cache()
+        return c.get()
+
+
+    def test_caching(self):
+        self.get_cached()
+        self.assertTrue(self._cache.used_cache)
+
+
+    def test_caching_returns_results(self):
+        self.assertEqual(2, len(self.get_cached()))
+
+
+    def test_caching_doesnt_overwrite_cache(self):
+        self.get_cached()
+        self.assertFalse(self._cache.wrote_cache)
+
+
+    def test_expired(self):
+        self.get_cached()
+        fn = self._cache.filename
+        s = os.stat(fn)
+        os.utime(fn, (s.st_atime, s.st_mtime - 48*60*60))
+        c = self.cache()
+        c.get()
+        self.assertFalse(c.used_cache)
+        
     
     def test_none_passed_does_not_cache(self):
-        pass
+        self.get_cached()
+        c = self.cache(method_cache=None)
+        c.get()
+        self.assertFalse(c.used_cache)
 
 
-    def test_methodcache_expired(self):
-        pass
-
-    
-    def test_methodcache_caches_result(self):
-        pass
-
-    
-    def test_etsy_home_exists_file_doesnt(self):
-        pass
+        

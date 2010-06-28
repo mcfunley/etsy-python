@@ -45,9 +45,25 @@ class MockAPI(API):
 
 
 
+class MockLog(object):
+    def __init__(self, test):
+        self.lines = []
+        self.test = test
+
+    def __call__(self, msg):
+        self.lines.append(msg)
+
+
+    def assertLine(self, msg):
+        failmsg = 'Could not find "%s" in the log. The log was:\n\n%s' % (
+            msg, '\n'.join(['   %s' % x for x in self.lines]))
+        self.test.assertTrue(msg in self.lines, failmsg)
+
+
+
 class CoreTests(Test):
     def setUp(self):
-        self.api = MockAPI('apikey')
+        self.api = MockAPI('apikey', log=MockLog(self))
 
 
     def last_query(self):
@@ -224,6 +240,18 @@ class CoreTests(Test):
                          msg)
 
 
+    def test_logging_works(self):
+        self.api.log('foo')
+        self.api.log.assertLine('foo')
+
+
+    def test_log_at_startup(self):
+        self.api.log.assertLine('Creating v1 Etsy API, base url=http://host.')
+
+
+
+
+
 
 class MockAPI_NoMethods(MockAPI):
     def _get_methods(self, method_cache):
@@ -305,11 +333,15 @@ class MethodTableCacheTests(Test):
         self.assertFalse(self._cache.wrote_cache)
 
 
-    def test_expired(self):
+    def make_old_cache(self):
         self.get_cached()
         fn = self._cache.filename
         s = os.stat(fn)
         os.utime(fn, (s.st_atime, s.st_mtime - 48*60*60))
+
+
+    def test_expired(self):
+        self.make_old_cache()
         c = self.cache()
         c.get()
         self.assertFalse(c.used_cache)
@@ -322,4 +354,34 @@ class MethodTableCacheTests(Test):
         self.assertFalse(c.used_cache)
 
 
-        
+    def log_tester(self, method_cache=missing):
+        return MockAPI('key', method_cache=method_cache, log=MockLog(self))
+
+
+    def test_logs_when_not_using_cache(self):
+        api = self.log_tester(None)
+        api.log.assertLine('Not using cached method table.')
+
+
+    def test_logs_when_method_table_too_old(self):
+        self.make_old_cache()
+        self.log_tester().log.assertLine('Method table too old.')
+
+    
+    def test_logs_when_reading_cache(self):
+        api = MockAPI('key')
+        self.log_tester().log.assertLine('Reading method table cache: %s' % 
+                                         api.method_cache.filename)
+
+
+    def test_logs_when_not_writing_new_cache(self):
+        api = self.log_tester(None)
+        api.log.assertLine(
+            'Method table caching disabled, not writing new cache.')
+
+
+    def test_logs_when_writing_new_cache(self):
+        t = self.log_tester()
+        t.log.assertLine('Wrote method table cache: %s' % 
+                         t.method_cache.filename)
+

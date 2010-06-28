@@ -12,6 +12,8 @@ import time
 missing = object()
 
 
+
+
 class TypeChecker(object):
     def __init__(self):
         self.checkers = {
@@ -162,27 +164,32 @@ class MethodTableCache(object):
 
     def get_cached(self):
         if self.filename is None or not os.path.isfile(self.filename):
+            self.api.log('Not using cached method table.')
             return None
         if time.time() - os.stat(self.filename).st_mtime > self.max_age:
+            self.api.log('Method table too old.')
             return None
         with open(self.filename, 'r') as f:
             self.used_cache = True
+            self.api.log('Reading method table cache: %s' % self.filename)
             return json.loads(f.read())
 
 
     def cache(self, methods):
         if self.filename is None:
-            # not caching
+            self.api.log('Method table caching disabled, not writing new cache.')
             return
         with open(self.filename, 'w') as f:
             json.dump(methods, f)
             self.wrote_cache = True
+            self.api.log('Wrote method table cache: %s' % self.filename)
 
 
 
 
 class API(object):
-    def __init__(self, api_key='', key_file=None, method_cache=missing):
+    def __init__(self, api_key='', key_file=None, method_cache=missing, 
+                 log=None):
         """
         Creates a new API instance. When called with no arguments, 
         reads the appropriate API key from the default ($HOME/.etsy/keys) 
@@ -194,6 +201,9 @@ class API(object):
             method_cache - A file to save the API method table in for 
                            24 hours. This speeds up the creation of API
                            objects. 
+            log          - An callable that accepts a string parameter.
+                           Receives log messages. No logging is done if
+                           this is None.
 
         Only one of api_key and key_file may be passed.
 
@@ -220,10 +230,22 @@ class API(object):
         else:
             self.api_key = self._read_key(key_file)
 
+        self.log = log or self._ignore
+        if not callable(self.log):
+            raise ValueError('log must be a callable.')
+
         self.type_checker = TypeChecker()
 
         self.decode = json.loads
+
+        self.log('Creating %s Etsy API, base url=%s.' % (
+                self.api_version, self.api_url))
         self._get_methods(method_cache)
+
+
+
+    def _ignore(self, _):
+        pass
 
 
     def _get_methods(self, method_cache):
@@ -240,7 +262,7 @@ class API(object):
 
 
     def get_method_table(self):
-        return self.get('/')
+        return self._get('/')
 
 
     def _read_key(self, key_file):

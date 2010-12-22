@@ -76,6 +76,20 @@ class TypeChecker(object):
 
 class APIMethod(object):
     def __init__(self, api, spec):
+        """
+        Parameters:
+            api          - API object that this method is associated with.
+            spec         - dict with the method specification; e.g.:
+
+              {'name': 'createListing', 'uri': '/listings', 'visibility':
+              'private', 'http_method': 'POST', 'params': {'description':
+              'text', 'tags': 'array(string)', 'price': 'float', 'title':
+              'string', 'materials': 'array(string)', 'shipping_template_id':
+              'int', 'quantity': 'int', 'shop_section_id': 'int'}, 'defaults':
+              {'materials': None, 'shop_section_id': None}, 'type': 'Listing',
+              'description': 'Creates a new Listing'} 
+        """
+
         self.api = api
         self.spec = spec
         self.type_checker = self.api.type_checker
@@ -123,7 +137,7 @@ class APIMethod(object):
             del kwargs[p]
 
         self.type_checker(self.spec, **kwargs)
-        return self.api._get(self.uri_format % ps, **kwargs)
+        return self.api._get(self.spec['http_method'], self.uri_format % ps, **kwargs)
 
 
 
@@ -256,6 +270,8 @@ class API(object):
         for method in ms:
             setattr(self, method['name'], APIMethod(self, method))
 
+        # self.log('API._get_methods: self._methods = %r' % self._methods)
+
 
     def etsy_home(self):
         return os.path.expanduser('~/.etsy')
@@ -277,18 +293,26 @@ class API(object):
         return gs[self.api_version]
         
 
-    def _get_url(self, url):
+    def _get_url(self, url, http_method, body):
+        print "_get_url: url = %r" % url
         with closing(urllib2.urlopen(url)) as f:
             return f.read() 
   
 
-    def _get(self, url, **kwargs):
+    def _get(self, http_method, url, **kwargs):
         kwargs.update(dict(api_key=self.api_key))
-        qs = urlencode(kwargs)
-        url = '%s%s?%s' % (self.api_url, url, qs)
+
+        if http_method == 'GET':
+            url = '%s%s?%s' % (self.api_url, url, urlencode(kwargs))
+            body = None
+        elif http_method == 'POST':
+            url = '%s%s' % (self.api_url, url)
+            body = urlencode(kwargs)
 
         self.last_url = url
-        data = self._get_url(url)
+        data = self._get_url(url, http_method, body)
+
+        self.log('API._get: http_method = %r, url = %r, data = %r' % (http_method, url, data))
 
         self.data = self.decode(data)
         self.count = self.data['count']

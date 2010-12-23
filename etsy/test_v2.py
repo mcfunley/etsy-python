@@ -59,22 +59,20 @@ def testCreateListing():
     print "Creating listing..."
     
     result = etsy_api.createListing(
-        description='Description of my item',
-        title='Title of my item',
-        price=5.95,
-        # tags='accessories,case,compact,men,mirror,money_clip,card,cigarette,ipod,mp3_player,wallet,pocket,retro,women',
-        tags='accessories',
-        materials='case',
-        shipping_template_id=6509333,
-        shop_section_id=6866915,
-        quantity=5
-        )
+        description=config.description,
+        title=config.title,
+        price=config.price,
+        tags=config.tags,
+        materials=config.materials,
+        shipping_template_id=config.shipping_template_id,
+        shop_section_id=config.shop_section_id,
+        quantity=config.quantity)
 
     listing_id = result[0]['listing_id']
 
     print "Created listing with listing id %d" % listing_id
 
-    result = etsy_api.uploadListingImage(listing_id=listing_id, image=file('/Users/marca/Desktop/looselips.png'))
+    result = etsy_api.uploadListingImage(listing_id=listing_id, image=config.image_file)
 
     print "Result of uploading image: %r" % result
 

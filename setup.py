@@ -17,4 +17,7 @@ setup(
     long_description = long_description,
     test_suite = 'test',
     install_requires=['simplejson >= 2.0'],
-    )
+    extras_require = {
+        'OAuth': ["oauth2>=1.2.0"],
+    }
+)

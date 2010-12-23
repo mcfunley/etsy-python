@@ -3,7 +3,8 @@
 import os, sys
 import oauth2 as oauth
 import webbrowser
-from etsy import Etsy, EtsyOAuthClient
+from etsy import Etsy
+from etsy.oauth import EtsyOAuthClient
 
 logging_enabled = True
 

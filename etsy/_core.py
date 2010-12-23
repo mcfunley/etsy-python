@@ -7,6 +7,7 @@ import os
 import re
 import tempfile
 import time
+from _multipartformdataencode import encode_multipart_formdata
 
 
 missing = object()
@@ -278,7 +279,7 @@ class API(object):
 
 
     def get_method_table(self):
-        return self._get('/')
+        return self._get('GET', '/')
 
 
     def _read_key(self, key_file):
@@ -293,7 +294,7 @@ class API(object):
         return gs[self.api_version]
         
 
-    def _get_url(self, url, http_method, body):
+    def _get_url(self, url, http_method, content_type, body):
         print "_get_url: url = %r" % url
         with closing(urllib2.urlopen(url)) as f:
             return f.read() 
@@ -305,12 +306,23 @@ class API(object):
         if http_method == 'GET':
             url = '%s%s?%s' % (self.api_url, url, urlencode(kwargs))
             body = None
+            content_type = None
         elif http_method == 'POST':
             url = '%s%s' % (self.api_url, url)
-            body = urlencode(kwargs)
+            fields = []
+            files = []
+
+            for name, value in kwargs.items():
+                if isinstance(value, file):
+                    file_object = value
+                    files.append((name, file_object.name, file_object.read()))
+                else:
+                    fields.append((name, str(value)))
+
+            content_type, body = encode_multipart_formdata(fields, files)
 
         self.last_url = url
-        data = self._get_url(url, http_method, body)
+        data = self._get_url(url, http_method, content_type, body)
 
         self.log('API._get: http_method = %r, url = %r, data = %r' % (http_method, url, data))
 

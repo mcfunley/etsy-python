@@ -19,8 +19,8 @@ class EtsyV2(API):
 
         super(EtsyV2, self).__init__(api_key, key_file, method_cache, log)
 
-    def _get_url(self, url, http_method, body):
-        return self.etsy_oauth_client.do_oauth_request(url, http_method, body)
+    def _get_url(self, url, http_method, content_type, body):
+        return self.etsy_oauth_client.do_oauth_request(url, http_method, content_type, body)
   
 class EtsyOAuthClient(oauth.Client):
     request_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/request_token'
@@ -52,8 +52,11 @@ class EtsyOAuthClient(oauth.Client):
     def set_oauth_verifier(self, oauth_verifier):
         self.token = self.get_access_token(oauth_verifier)
 
-    def do_oauth_request(self, url, http_method, body):
-        resp, content = self.request(url, http_method, body=body)
+    def do_oauth_request(self, url, http_method, content_type, body):
+        if content_type and content_type != 'application/x-www-form-urlencoded':
+            resp, content = self.request(url, http_method, body=body, headers={'Content-Type': content_type})
+        else:
+            resp, content = self.request(url, http_method, body=body)
 
         return content
 

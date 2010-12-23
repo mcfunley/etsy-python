@@ -5,7 +5,7 @@ import oauth2 as oauth
 import webbrowser
 from etsy import EtsyV2 as Etsy, EtsyOAuthClient
 
-logging_enabled = False
+logging_enabled = True
 
 def my_log(msg):
     if logging_enabled: print(msg)
@@ -58,17 +58,25 @@ print('findAllUserShippingTemplates => %r' % etsy_api.findAllUserShippingTemplat
 def testCreateListing():
     print "Creating listing..."
     
-    print etsy_api.createListing(
-            description='Description of my item',
-            title='Title of my item',
-            price=5.95,
-            # tags='accessories,case,compact,men,mirror,money_clip,card,cigarette,ipod,mp3_player,wallet,pocket,retro,women',
-            tags='accessories',
-            materials='case',
-            shipping_template_id=6509333,
-            shop_section_id=6866915,
-            quantity=5
-            )
+    result = etsy_api.createListing(
+        description='Description of my item',
+        title='Title of my item',
+        price=5.95,
+        # tags='accessories,case,compact,men,mirror,money_clip,card,cigarette,ipod,mp3_player,wallet,pocket,retro,women',
+        tags='accessories',
+        materials='case',
+        shipping_template_id=6509333,
+        shop_section_id=6866915,
+        quantity=5
+        )
 
-# testCreateListing()
+    listing_id = result[0]['listing_id']
+
+    print "Created listing with listing id %d" % listing_id
+
+    result = etsy_api.uploadListingImage(listing_id=listing_id, image=file('/Users/marca/Desktop/looselips.png'))
+
+    print "Result of uploading image: %r" % result
+
+testCreateListing()
 

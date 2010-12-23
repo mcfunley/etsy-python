@@ -16,5 +16,5 @@ setup(
     packages = ['etsy'],
     long_description = long_description,
     test_suite = 'test',
-    setup_requires=['simplejson >= 2.0'],
+    install_requires=['simplejson >= 2.0'],
     )

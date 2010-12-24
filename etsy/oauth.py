@@ -1,4 +1,6 @@
 import oauth2 as oauth
+import urllib
+from cgi import parse_qsl
 
 class EtsyOAuthClient(oauth.Client):
     request_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/request_token'
@@ -9,12 +11,13 @@ class EtsyOAuthClient(oauth.Client):
         consumer = oauth.Consumer(oauth_consumer_key, oauth_consumer_secret)
         super(EtsyOAuthClient, self).__init__(consumer)
 
-    def get_request_token(self):
-        resp, content = self.request(self.request_token_url, 'GET')
+    def get_request_token(self, **kwargs):
+        request_token_url = '%s?%s' % (self.request_token_url, urllib.urlencode(kwargs))
+        resp, content = self.request(request_token_url, 'GET')
         return self._get_token(content)
 
-    def get_signin_url(self):
-        self.token = self.get_request_token()
+    def get_signin_url(self, **kwargs):
+        self.token = self.get_request_token(**kwargs)
 
         return self.signin_url + '?' + \
                urllib.urlencode({'oauth_token': self.token.key})

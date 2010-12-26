@@ -9,9 +9,11 @@ class EtsyOAuthClient(oauth.Client):
     access_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/access_token'
     signin_url = 'https://www.etsy.com/oauth/signin'
 
-    def __init__(self, oauth_consumer_key, oauth_consumer_secret):
+    def __init__(self, oauth_consumer_key, oauth_consumer_secret, token=None, logger=None):
         consumer = oauth.Consumer(oauth_consumer_key, oauth_consumer_secret)
         super(EtsyOAuthClient, self).__init__(consumer)
+        self.token = token
+        self.logger = logger
 
     def get_request_token(self, **kwargs):
         request_token_url = '%s?%s' % (self.request_token_url, urllib.urlencode(kwargs))
@@ -40,6 +42,9 @@ class EtsyOAuthClient(oauth.Client):
             resp, content = self.request(url, http_method, body=body, headers={'Content-Type': content_type})
         else:
             resp, content = self.request(url, http_method, body=body)
+
+        if self.logger:
+            self.logger.debug('do_oauth_request: content = %r' % content)
 
         return content
 

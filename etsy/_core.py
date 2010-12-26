@@ -27,6 +27,8 @@ class TypeChecker(object):
     def __call__(self, method, **kwargs):
         params = method['params']
         for k, v in kwargs.items():
+            if k == 'includes': continue
+
             if k not in params:
                 raise ValueError('Unexpected argument: %s=%s' % (k, v))
             

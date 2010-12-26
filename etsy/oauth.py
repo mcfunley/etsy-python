@@ -2,6 +2,8 @@ import oauth2 as oauth
 import urllib
 from cgi import parse_qsl
 
+EtsyOAuthToken = oauth.Token
+
 class EtsyOAuthClient(oauth.Client):
     request_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/request_token'
     access_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/access_token'

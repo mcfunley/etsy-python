@@ -315,9 +315,8 @@ class API(object):
             files = []
 
             for name, value in kwargs.items():
-                if isinstance(value, file):
-                    file_object = value
-                    files.append((name, file_object.name, file_object.read()))
+                if hasattr(value, 'read'):
+                    files.append((name, value.name, value.read()))
                 else:
                     fields.append((name, str(value)))
 

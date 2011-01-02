@@ -26,12 +26,9 @@ class EtsyOAuthClient(oauth.Client):
         return self.signin_url + '?' + \
                urllib.urlencode({'oauth_token': self.token.key})
 
-    def get_access_token_url(self, oauth_verifier):
-        return self.access_token_url + '?' + \
-               urllib.urlencode({'oauth_verifier': oauth_verifier})
-
     def get_access_token(self, oauth_verifier):
-        resp, content = self.request(self.get_access_token_url(oauth_verifier), 'GET')
+        self.token.set_verifier(oauth_verifier)
+        resp, content = self.request(self.access_token_url, 'GET')
         return self._get_token(content)
 
     def set_oauth_verifier(self, oauth_verifier):

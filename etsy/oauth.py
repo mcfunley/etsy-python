@@ -23,6 +23,8 @@ class EtsyOAuthClient(oauth.Client):
     def get_signin_url(self, **kwargs):
         self.token = self.get_request_token(**kwargs)
 
+        if self.token is None: return None
+
         return self.signin_url + '?' + \
                urllib.urlencode({'oauth_token': self.token.key})
 
@@ -48,6 +50,7 @@ class EtsyOAuthClient(oauth.Client):
     def _get_token(self, content):
         d = dict(parse_qsl(content))
 
-        return oauth.Token(d['oauth_token'], d['oauth_token_secret'])
-
-
+        try:
+            return oauth.Token(d['oauth_token'], d['oauth_token_secret'])
+        except KeyError, e:
+            return None

@@ -1,17 +1,17 @@
 import oauth2 as oauth
 import urllib
 from cgi import parse_qsl
+from etsy_env import EtsyEnvSandbox, EtsyEnvProduction
 
 EtsyOAuthToken = oauth.Token
 
 class EtsyOAuthClient(oauth.Client):
-    request_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/request_token'
-    access_token_url = 'http://openapi.etsy.com/v2/sandbox/oauth/access_token'
-    signin_url = 'https://www.etsy.com/oauth/signin'
-
-    def __init__(self, oauth_consumer_key, oauth_consumer_secret, token=None, logger=None):
+    def __init__(self, oauth_consumer_key, oauth_consumer_secret, etsy_env=EtsyEnvSandbox(), token=None, logger=None):
         consumer = oauth.Consumer(oauth_consumer_key, oauth_consumer_secret)
         super(EtsyOAuthClient, self).__init__(consumer)
+        self.request_token_url = etsy_env.request_token_url
+        self.access_token_url = etsy_env.access_token_url
+        self.signin_url = etsy_env.signin_url
         self.token = token
         self.logger = logger
 

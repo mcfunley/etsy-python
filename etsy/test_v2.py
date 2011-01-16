@@ -3,10 +3,11 @@
 import os, sys
 import oauth2 as oauth
 import webbrowser
-from etsy import Etsy
+from etsy import Etsy, EtsyEnvSandbox, EtsyEnvProduction
 from etsy.oauth import EtsyOAuthClient
 
 logging_enabled = True
+etsy_env = EtsyEnvProduction()
 
 def my_log(msg):
     if logging_enabled: print(msg)
@@ -32,7 +33,8 @@ except ImportError:
 if hasattr(config, 'oauth_consumer_key') and hasattr(config, 'oauth_consumer_secret'):
     oauth_client = EtsyOAuthClient(
         oauth_consumer_key=config.oauth_consumer_key,
-        oauth_consumer_secret=config.oauth_consumer_secret)
+        oauth_consumer_secret=config.oauth_consumer_secret,
+        etsy_env=etsy_env)
 else:
     sys.stderr.write('ERROR: You must set oauth_consumer_key and oauth_consumer_secret in config.py\n')
     sys.exit(1)
@@ -46,7 +48,7 @@ else:
     oauth_client.set_oauth_verifier(raw_input('Enter OAuth verifier: '))
     write_config_file(oauth_client.token)
 
-etsy_api = Etsy(etsy_oauth_client=oauth_client, log=my_log)
+etsy_api = Etsy(etsy_oauth_client=oauth_client, etsy_env=etsy_env, log=my_log)
 
 # print 'oauth access token: (key=%r; secret=%r)' % (oauth_client.token.key, oauth_client.token.secret)
 

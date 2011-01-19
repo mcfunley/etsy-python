@@ -327,7 +327,11 @@ class API(object):
 
         self.log('API._get: http_method = %r, url = %r, data = %r' % (http_method, url, data))
 
-        self.data = self.decode(data)
+        try:
+            self.data = self.decode(data)
+        except json.JSONDecodeError:
+            raise ValueError('Could not decode response from Etsy as JSON: %r' % data)
+
         self.count = self.data['count']
         return self.data['results']
 

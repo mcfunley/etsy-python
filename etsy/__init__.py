@@ -1,4 +1,3 @@
-from _v1 import EtsyV1, EtsyV1
 from _v2 import EtsyV2 as Etsy
 from etsy_env import EtsyEnvSandbox, EtsyEnvProduction
 

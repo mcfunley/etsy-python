@@ -40,7 +40,7 @@ class MockAPI(API):
                  'description': 'no pos arguments'}]
 
 
-    def _get_url(self, url):
+    def _get_url(self, url, http_method, content_type, body):
         return '{ "count": 1, "results": [3] }'
 
 

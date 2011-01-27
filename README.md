@@ -132,7 +132,12 @@ api = Etsy(method_cache=None)
 
 ## Version History
 
-### Version 0.2.1 - in progress
+### Version 0.3 
+* Support for Etsy API v2 thanks to Ben Dayan
+* Removed support for now-dead Etsy API v1. 
+
+
+### Version 0.2.1 
 * Added a cache for the method table json.
 * Added a logging facility.
 

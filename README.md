@@ -37,26 +37,6 @@ Type "help", "copyright", "credits" or "license" for more information.
 </pre>
 
 
-## Compatibility
-
-*Draft - v2 API support not implemented yet.*
-
-There are currently two versions of the Etsy API, v1 and v2. This
-library works with both versions. The basic interface to either API is
-the same, although many of the methods are different. In order to use
-the v2 API,
-
-<pre>
-from etsy import EtsyV2 as Etsy
-</pre>
-
-At some point, the v2 API will replace the v1 API as the default. Therefore you 
-may want to import the v1 API explicitly, like this:
-
-<pre>
-from etsy import EtsyV1 as Etsy
-</pre>
-
 See also [this blog post](http://codeascraft.etsy.com/2010/04/22/announcing-etsys-new-api/)
 on Code as Craft.
 
@@ -69,7 +49,6 @@ your API keys in a file called $HOME/etsy/keys (or the equivalent on
 Windows) with the following format:
 
 <pre>
-v1 = 'Etsy API version 1 key goes here'
 v2 = 'Etsy API version 2 key goes here'
 </pre>
 
@@ -132,8 +111,10 @@ api = Etsy(method_cache=None)
 
 ## Version History
 
+
+
 ### Version 0.3 
-* Support for Etsy API v2 thanks to Ben Dayan
+* Support for Etsy API v2 thanks to [Marc Abramowitz](http://marc-abramowitz.com). 
 * Removed support for now-dead Etsy API v1. 
 
 

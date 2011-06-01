@@ -62,6 +62,8 @@ class TypeChecker(object):
 
 
     def check_int(self, value):
+        if isinstance(value, long):
+            return True, value
         return isinstance(value, int), value
 
     

@@ -113,7 +113,8 @@ api = Etsy(method_cache=None)
 
 
 ### Version 0.3.1
-* Allowing Python Longs to be passed for parameters declared as "integers" by the API. 
+* Allowing Python Longs to be passed for parameters declared as "integers" by the API 
+  (thanks to [Marc Abramowitz](http://marc-abramowitz.com)). 
 
 
 ### Version 0.3 

@@ -157,6 +157,11 @@ class CoreTests(Test):
         self.assertEqual(self.last_query()['limit'], ['5'])
 
 
+    def test_parameter_type_long(self):
+        self.api.testMethod(test_id=1L, limit=5L)
+        self.assertEqual(self.last_query()['limit'], ['5'])
+
+
     def bad_value_msg(self, name, t, v):
         return "Bad value for parameter %s of type '%s' - %s" % (name, t, v)
 

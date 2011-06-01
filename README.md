@@ -112,6 +112,9 @@ api = Etsy(method_cache=None)
 ## Version History
 
 
+### Version 0.3.1
+* Allowing Python Longs to be passed for parameters declared as "integers" by the API. 
+
 
 ### Version 0.3 
 * Support for Etsy API v2 thanks to [Marc Abramowitz](http://marc-abramowitz.com). 
